@@ -35,7 +35,7 @@ speed_scaling_state_broadcaster:
 
 force_torque_sensor_broadcaster:
   ros__parameters:
-    sensor_name: tcp_fts_sensor
+    sensor_name: ursim.tcp_fts_sensor
     state_interface_names:
       - force.x
       - force.y
@@ -50,12 +50,12 @@ force_torque_sensor_broadcaster:
 joint_trajectory_controller:
   ros__parameters:
     joints:
-      - shoulder_pan_joint
-      - shoulder_lift_joint
-      - elbow_joint
-      - wrist_1_joint
-      - wrist_2_joint
-      - wrist_3_joint
+      - ursim.shoulder_pan_joint
+      - ursim.shoulder_lift_joint
+      - ursim.elbow_joint
+      - ursim.wrist_1_joint
+      - ursim.wrist_2_joint
+      - ursim.wrist_3_joint
     command_interfaces:
       - position
     state_interfaces:
@@ -78,12 +78,12 @@ joint_trajectory_controller:
 scaled_joint_trajectory_controller:
   ros__parameters:
     joints:
-      - shoulder_pan_joint
-      - shoulder_lift_joint
-      - elbow_joint
-      - wrist_1_joint
-      - wrist_2_joint
-      - wrist_3_joint
+      - ursim.shoulder_pan_joint
+      - ursim.shoulder_lift_joint
+      - ursim.elbow_joint
+      - ursim.wrist_1_joint
+      - ursim.wrist_2_joint
+      - ursim.wrist_3_joint
     command_interfaces:
       - position
     state_interfaces:
@@ -105,20 +105,20 @@ scaled_joint_trajectory_controller:
 forward_velocity_controller:
   ros__parameters:
     joints:
-      - shoulder_pan_joint
-      - shoulder_lift_joint
-      - elbow_joint
-      - wrist_1_joint
-      - wrist_2_joint
-      - wrist_3_joint
+      - ursim.shoulder_pan_joint
+      - ursim.shoulder_lift_joint
+      - ursim.elbow_joint
+      - ursim.wrist_1_joint
+      - ursim.wrist_2_joint
+      - ursim.wrist_3_joint
     interface_name: velocity
 
 forward_position_controller:
   ros__parameters:
     joints:
-      - shoulder_pan_joint
-      - shoulder_lift_joint
-      - elbow_joint
-      - wrist_1_joint
-      - wrist_2_joint
-      - wrist_3_joint
+      - ursim.shoulder_pan_joint
+      - ursim.shoulder_lift_joint
+      - ursim.elbow_joint
+      - ursim.wrist_1_joint
+      - ursim.wrist_2_joint
+      - ursim.wrist_3_joint

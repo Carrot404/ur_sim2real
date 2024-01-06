@@ -40,29 +40,54 @@ def generate_launch_description():
     declared_arguments = []
     declared_arguments.append(
         DeclareLaunchArgument(
+            "ur_type",
+            default_value="ur3e",
+            description="Type/series of used UR robot.",
+            choices=["ur3", "ur3e", "ur5", "ur5e", "ur10", "ur10e", "ur16e"],
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             "robot_ip",
+            default_value="192.168.1.120",
             description="IP address by which the robot can be reached.",
         )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "use_fake_hardware",
-            default_value="false",
-            description="Start robot with fake hardware mirroring command to its states.",
+            "runtime_config_package",
+            default_value="ur_sim2real",
+            description='Package with the controller\'s configuration in "config" folder. \
+        Usually the argument is not set, it enables use of a custom setup.',
         )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "fake_sensor_commands",
-            default_value="false",
-            description="Enable fake command interfaces for sensors used for simple simulations. \
-            Used only if 'use_fake_hardware' parameter is true.",
+            "controllers_file",
+            default_value="ur_real_controllers.yaml",
+            description="YAML file with the controllers configuration.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "tf_prefix",
+            default_value="ur3e.",
+            description="Prefix of the joint names, useful for \
+            multi-robot setup. If changed than also joint names in the controllers' configuration \
+            have to be updated.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "ur_namespace",
+            description="Namespace of the robot",
+            default_value="UR3E",
         )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
             "initial_joint_controller",
-            default_value="scaled_joint_trajectory_controller",
+            default_value="forward_position_controller",
             description="Initially loaded robot controller.",
             choices=[
                 "scaled_joint_trajectory_controller",
@@ -81,19 +106,24 @@ def generate_launch_description():
     )
 
     # Initialize Arguments
+    ur_type = LaunchConfiguration("ur_type")
     robot_ip = LaunchConfiguration("robot_ip")
-    use_fake_hardware = LaunchConfiguration("use_fake_hardware")
-    fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
+    runtime_config_package = LaunchConfiguration("runtime_config_package")
+    controllers_file = LaunchConfiguration("controllers_file")
+    tf_prefix = LaunchConfiguration("tf_prefix")
+    ur_namespace = LaunchConfiguration("ur_namespace")
     initial_joint_controller = LaunchConfiguration("initial_joint_controller")
     activate_joint_controller = LaunchConfiguration("activate_joint_controller")
 
     base_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([ThisLaunchFileDir(), "/ur_control.launch.py"]),
         launch_arguments={
-            "ur_type": "ur3e",
+            "ur_type": ur_type,
             "robot_ip": robot_ip,
-            "use_fake_hardware": use_fake_hardware,
-            "fake_sensor_commands": fake_sensor_commands,
+            "runtime_config_package": runtime_config_package,
+            "controllers_file": controllers_file,
+            "tf_prefix": tf_prefix,
+            "ur_namespace": ur_namespace,
             "initial_joint_controller": initial_joint_controller,
             "activate_joint_controller": activate_joint_controller,
         }.items(),

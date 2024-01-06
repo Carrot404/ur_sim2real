@@ -52,6 +52,7 @@ def launch_setup(context, *args, **kwargs):
     description_package = LaunchConfiguration("description_package")
     description_file = LaunchConfiguration("description_file")
     tf_prefix = LaunchConfiguration("tf_prefix")
+    ur_namespace = LaunchConfiguration("ur_namespace")
     use_fake_hardware = LaunchConfiguration("use_fake_hardware")
     fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
     controller_spawner_timeout = LaunchConfiguration("controller_spawner_timeout")
@@ -194,27 +195,31 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # define update rate
-    update_rate_config_file = PathJoinSubstitution(
-        [
-            FindPackageShare(runtime_config_package),
-            "config",
-            ur_type.perform(context) + "_update_rate.yaml",
-        ]
-    )
+    # update_rate_config_file = PathJoinSubstitution(
+    #     [
+    #         FindPackageShare(runtime_config_package),
+    #         "config",
+    #         ur_type.perform(context) + "_update_rate.yaml",
+    #     ]
+    # )
 
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[robot_description, update_rate_config_file, initial_joint_controllers],
+        # parameters=[robot_description, update_rate_config_file, initial_joint_controllers],
+        parameters=[robot_description, initial_joint_controllers],
         output="screen",
+        namespace=ur_namespace,
         condition=IfCondition(use_fake_hardware),
     )
 
     ur_control_node = Node(
         package="ur_robot_driver",
         executable="ur_ros2_control_node",
-        parameters=[robot_description, update_rate_config_file, initial_joint_controllers],
+        # parameters=[robot_description, update_rate_config_file, initial_joint_controllers],
+        parameters=[robot_description, initial_joint_controllers],
         output="screen",
+        namespace=ur_namespace,
         condition=UnlessCondition(use_fake_hardware),
     )
 
@@ -226,6 +231,7 @@ def launch_setup(context, *args, **kwargs):
         output="screen",
         emulate_tty=True,
         parameters=[{"robot_ip": robot_ip}],
+        # namespace=ur_namespace, # Test: ?
     )
 
     tool_communication_node = Node(
@@ -243,32 +249,39 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
-    controller_stopper_node = Node(
-        package="ur_robot_driver",
-        executable="controller_stopper_node",
-        name="controller_stopper",
-        output="screen",
-        emulate_tty=True,
-        condition=UnlessCondition(use_fake_hardware),
-        parameters=[
-            {"headless_mode": headless_mode},
-            {"joint_controller_active": activate_joint_controller},
-            {
-                "consistent_controllers": [
-                    "io_and_status_controller",
-                    "force_torque_sensor_broadcaster",
-                    "joint_state_broadcaster",
-                    "speed_scaling_state_broadcaster",
-                ]
-            },
-        ],
-    )
+    # controller_stopper_node = Node(
+    #     package="ur_robot_driver",
+    #     executable="controller_stopper_node",
+    #     name="controller_stopper",
+    #     output="screen",
+    #     emulate_tty=True,
+    #     condition=UnlessCondition(use_fake_hardware),
+    #     parameters=[
+    #         {"headless_mode": headless_mode},
+    #         {"joint_controller_active": activate_joint_controller},
+    #         {
+    #             "consistent_controllers": [
+    #                 "io_and_status_controller",
+    #                 "force_torque_sensor_broadcaster",
+    #                 "joint_state_broadcaster",
+    #                 "speed_scaling_state_broadcaster",
+    #             ]
+    #         },
+    #     ],
+    #     # namespace=ur_namespace, # Test: ?
+    # )
 
     robot_state_publisher_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
+        name="robot_state_publisher",
         output="both",
         parameters=[robot_description],
+        namespace=ur_namespace,
+        remappings=[
+            ('/tf', 'tf'),
+            ('/tf_static', 'tf_static')
+        ],
     )
 
     rviz_node = Node(
@@ -278,9 +291,19 @@ def launch_setup(context, *args, **kwargs):
         name="rviz2",
         output="log",
         arguments=["-d", rviz_config_file],
+        namespace = ur_namespace,
+        remappings=[
+            ('/tf', 'tf'),
+            ('/tf_static', 'tf_static'),
+            ('/goal_pose', 'goal_pose'),
+            ('/clicked_point', 'clicked_point'),
+            ('/initialpose', 'initialpose'),
+        ],
     )
 
     # Spawn controllers
+    # TODO: Test for controller spawner ur_type.perform(context) + "_update_rate.yaml",
+    cm_name = "/" + ur_namespace.perform(context) + "/controller_manager"
     def controller_spawner(name, active=True):
         inactive_flags = ["--inactive"] if not active else []
         return Node(
@@ -289,7 +312,7 @@ def launch_setup(context, *args, **kwargs):
             arguments=[
                 name,
                 "--controller-manager",
-                "/controller_manager",
+                cm_name,
                 "--controller-manager-timeout",
                 controller_spawner_timeout,
             ]
@@ -302,11 +325,12 @@ def launch_setup(context, *args, **kwargs):
         "speed_scaling_state_broadcaster",
         "force_torque_sensor_broadcaster",
     ]
-    controller_spawner_inactive_names = ["forward_position_controller"]
+    # controller_spawner_inactive_names = ["forward_position_controller"]
 
-    controller_spawners = [controller_spawner(name) for name in controller_spawner_names] + [
-        controller_spawner(name, active=False) for name in controller_spawner_inactive_names
-    ]
+    controller_spawners = [controller_spawner(name) for name in controller_spawner_names] 
+    # + [
+    #     controller_spawner(name, active=False) for name in controller_spawner_inactive_names
+    # ]
 
     # There may be other controllers of the joints, but this is the initially-started one
     initial_joint_controller_spawner_started = Node(
@@ -315,7 +339,7 @@ def launch_setup(context, *args, **kwargs):
         arguments=[
             initial_joint_controller,
             "-c",
-            "/controller_manager",
+            cm_name,
             "--controller-manager-timeout",
             controller_spawner_timeout,
         ],
@@ -327,7 +351,7 @@ def launch_setup(context, *args, **kwargs):
         arguments=[
             initial_joint_controller,
             "-c",
-            "/controller_manager",
+            cm_name,
             "--controller-manager-timeout",
             controller_spawner_timeout,
             "--inactive",
@@ -340,7 +364,7 @@ def launch_setup(context, *args, **kwargs):
         ur_control_node,
         dashboard_client_node,
         tool_communication_node,
-        controller_stopper_node,
+        # controller_stopper_node,
         robot_state_publisher_node,
         rviz_node,
         initial_joint_controller_spawner_stopped,
@@ -428,6 +452,13 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            "ur_namespace",
+            default_value='""',
+            description="Namespace of the robot",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             "use_fake_hardware",
             default_value="false",
             description="Start robot with fake hardware mirroring command to its states.",
@@ -474,7 +505,7 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "launch_dashboard_client", default_value="true", description="Launch Dashboard Client?"
+            "launch_dashboard_client", default_value="false", description="Launch Dashboard Client?"
         )
     )
     declared_arguments.append(
