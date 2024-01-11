@@ -1,0 +1,7 @@
+<library path="ur_sim2real">
+  <class name="ur_sim2real/JointMimicController" type="ur_sim2real::JointMimicController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      This controller for the UR robot simulates the joint states of the simulated robot.
+    </description>
+  </class>
+</library>
