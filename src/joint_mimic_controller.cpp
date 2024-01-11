@@ -76,14 +76,14 @@ namespace ur_sim2real
     {
       for (size_t i = 0; i < num_joints_; ++i)
       {
-        joint_names_sim_[i] = params_.tf_prefix_sim + "/" + joint_names[i];
+        joint_names_sim_[i] = params_.tf_prefix_sim + joint_names[i];
       }
     }
     if (!params_.tf_prefix_real.empty())
     {
       for (size_t i = 0; i < num_joints_; ++i)
       {
-        joint_names_real_[i] = params_.tf_prefix_real + "/" + joint_names[i];
+        joint_names_real_[i] = params_.tf_prefix_real + joint_names[i];
       }
     }
 
