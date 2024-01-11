@@ -111,6 +111,34 @@ def generate_launch_description():
             description="Launch Rviz?",
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "script_command_port",
+            default_value="50014",
+            description="Port that will be opened to forward script commands from the driver to the robot",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "reverse_port",
+            default_value="50011",
+            description="Port that will be opened to send cyclic instructions from the driver to the robot controller.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "script_sender_port",
+            default_value="50012",
+            description="The driver will offer an interface to query the external_control URScript on this port.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "trajectory_port",
+            default_value="50013",
+            description="Port that will be opened for trajectory control.",
+        )
+    )
 
     # Initialize Arguments
     ur_type = LaunchConfiguration("ur_type")
@@ -121,6 +149,10 @@ def generate_launch_description():
     ur_namespace = LaunchConfiguration("ur_namespace")
     initial_joint_controller = LaunchConfiguration("initial_joint_controller")
     activate_joint_controller = LaunchConfiguration("activate_joint_controller")
+    script_command_port = LaunchConfiguration("script_command_port")
+    reverse_port = LaunchConfiguration("reverse_port")
+    script_sender_port = LaunchConfiguration("script_sender_port")
+    trajectory_port = LaunchConfiguration("trajectory_port")
 
     base_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([ThisLaunchFileDir(), "/ur_control.launch.py"]),
@@ -133,6 +165,10 @@ def generate_launch_description():
             "ur_namespace": ur_namespace,
             "initial_joint_controller": initial_joint_controller,
             "activate_joint_controller": activate_joint_controller,
+            "script_command_port": script_command_port,
+            "reverse_port": reverse_port,
+            "script_sender_port": script_sender_port,
+            "trajectory_port": trajectory_port,
         }.items(),
     )
 
