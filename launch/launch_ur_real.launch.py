@@ -101,7 +101,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "activate_joint_controller",
-            default_value="true",
+            default_value="false",
             description="Activate loaded joint controller.",
         )
     )
