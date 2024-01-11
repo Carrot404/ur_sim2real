@@ -76,7 +76,7 @@ install(FILES controller_plugins.xml
 )
 
 install(
-  DIRECTORY config launch
+  DIRECTORY config launch urdf
   DESTINATION share/${PROJECT_NAME}
 )
   
