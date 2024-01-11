@@ -94,7 +94,7 @@ def generate_launch_description():
                 "joint_trajectory_controller",
                 "forward_velocity_controller",
                 "forward_position_controller",
-                "mimic_joint_controller"
+                "joint_mimic_controller"
             ],
         )
     )
