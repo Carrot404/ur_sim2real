@@ -53,7 +53,8 @@ namespace ur_sim2real
     joint_mimic_controller::Params params_;
 
     size_t num_joints_;
-    std::vector<std::string> joint_names_;
+    std::vector<std::string> joint_names_sim_;
+    std::vector<std::string> joint_names_real_;
     std::vector<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> position_command_interfaces_;
     std::vector<double> position_cmd_;
 

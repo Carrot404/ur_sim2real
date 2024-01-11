@@ -24,8 +24,7 @@ namespace ur_sim2real
       param_listener_ = std::make_shared<joint_mimic_controller::ParamListener>(get_node());
       params_ = param_listener_->get_params();
 
-      RCLCPP_INFO(LOGGER, "Loading JointMimicController with tf_prefix: %s",
-                  params_.tf_prefix.c_str());
+      RCLCPP_INFO(LOGGER, "Loading JointMimicController!");
     }
     catch (std::exception &e)
     {
@@ -42,7 +41,7 @@ namespace ur_sim2real
     config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
 
     config.names.reserve(num_joints_);
-    for (const auto &joint_name : joint_names_)
+    for (const auto &joint_name : joint_names_real_)
     {
       config.names.emplace_back(joint_name + std::string("/position"));
     }
@@ -62,22 +61,32 @@ namespace ur_sim2real
     {
       params_ = param_listener_->get_params();
     }
-    joint_names_ = params_.joints;
-    if (joint_names_.empty())
+    std::vector<std::string> joint_names = params_.joints;
+    if (joint_names.empty())
     {
       RCLCPP_ERROR(LOGGER, "No joint names specified in ROS2 parameters");
       return controller_interface::CallbackReturn::ERROR;
     }
-    num_joints_ = joint_names_.size();
+    num_joints_ = joint_names.size();
+    joint_names_sim_.resize(num_joints_);
+    joint_names_real_.resize(num_joints_);
     position_cmd_.resize(num_joints_);
 
-    if (!params_.tf_prefix.empty())
+    if (!params_.tf_prefix_sim.empty())
     {
-      for (auto &joint_name : joint_names_)
+      for (size_t i = 0; i < num_joints_; ++i)
       {
-        joint_name = params_.tf_prefix + joint_name;
+        joint_names_sim_[i] = params_.tf_prefix_sim + "/" + joint_names[i];
       }
     }
+    if (!params_.tf_prefix_real.empty())
+    {
+      for (size_t i = 0; i < num_joints_; ++i)
+      {
+        joint_names_real_[i] = params_.tf_prefix_real + "/" + joint_names[i];
+      }
+    }
+
     if (params_.joint_state_topic.empty())
     {
       RCLCPP_ERROR(LOGGER, "Joint state topic is empty!");
@@ -108,12 +117,12 @@ namespace ur_sim2real
   {
 
     if (!controller_interface::get_ordered_interfaces(command_interfaces_,
-                                                      joint_names_,
+                                                      joint_names_real_,
                                                       "position",
                                                       position_command_interfaces_))
     {
       RCLCPP_ERROR(LOGGER, "Expected %zu command interfaces, got %zu.",
-                   joint_names_.size(),
+                   joint_names_real_.size(),
                    position_command_interfaces_.size());
       return controller_interface::CallbackReturn::ERROR;
     }
@@ -142,7 +151,7 @@ namespace ur_sim2real
     // write joint state to command interfaces
     for (size_t i = 0; i < num_joints_; ++i)
     {
-      const auto &joint_name = joint_names_[i];
+      const auto &joint_name = joint_names_sim_[i];
       const auto &joint_state = joint_state_msg_->name;
       const auto &joint_position = joint_state_msg_->position;
 

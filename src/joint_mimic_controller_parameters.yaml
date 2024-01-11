@@ -1,5 +1,10 @@
 joint_mimic_controller:
-  tf_prefix: {
+  tf_prefix_sim: {
+    type: string,
+    default_value: "ursim.",
+    description: "Urdf prefix of the corresponding arm"
+  }
+  tf_prefix_real: {
     type: string,
     default_value: "ur3e.",
     description: "Urdf prefix of the corresponding arm"
