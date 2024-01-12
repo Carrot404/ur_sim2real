@@ -117,7 +117,7 @@ namespace ur_sim2real
           [this](const std::shared_ptr<sensor_msgs::msg::JointState> msg)
       { joint_state_buffer_.writeFromNonRT(msg); };
       joint_state_sub_ = get_node()->create_subscription<sensor_msgs::msg::JointState>(
-          params_.joint_state_topic, rclcpp::SystemDefaultsQoS(), joint_state_callback);
+          joint_state_topic, rclcpp::SystemDefaultsQoS(), joint_state_callback);
     }
     catch (const std::exception &e)
     {
@@ -176,7 +176,7 @@ namespace ur_sim2real
   {
     position_command_interfaces_.clear();
 
-    joint_state_buffer_ = realtime_tools::RealtimeBuffer<std::shared_ptr<CmdType>>(nullptr);
+    joint_state_buffer_ = realtime_tools::RealtimeBuffer<std::shared_ptr<sensor_msgs::msg::JointState>>(nullptr);
 
     return CallbackReturn::SUCCESS;
   }
