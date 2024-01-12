@@ -22,8 +22,6 @@
 #include "realtime_tools/realtime_buffer.h"
 #include "sensor_msgs/msg/joint_state.hpp"
 
-#include "joint_mimic_controller_parameters.hpp"
-
 namespace ur_sim2real
 {
   using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;

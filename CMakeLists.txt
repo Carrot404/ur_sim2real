@@ -12,37 +12,25 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   hardware_interface
   rcutils
   pluginlib
-  # generate_parameter_library
   sensor_msgs
   realtime_tools
 )
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(backward_ros REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
-# generate_parameter_library(
-#   joint_mimic_controller_parameters
-#   src/joint_mimic_controller_parameters.yaml
-# )
-
 add_library(${PROJECT_NAME} SHARED
   src/joint_mimic_controller.cpp
 )
-
 target_include_directories(${PROJECT_NAME} PRIVATE
   include
 )
-# target_link_libraries(${PROJECT_NAME}
-#   joint_mimic_controller_parameters
-# )
 ament_target_dependencies(${PROJECT_NAME}
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
-
 target_compile_options(${PROJECT_NAME} PRIVATE -Wpedantic -Werror=return-type)
 
 # prevent pluginlib from using boost
@@ -64,7 +52,6 @@ endif()
 install(
   TARGETS 
     ${PROJECT_NAME}
-    # joint_mimic_controller_parameters
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
