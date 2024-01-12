@@ -12,7 +12,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   hardware_interface
   rcutils
   pluginlib
-  generate_parameter_library
+  # generate_parameter_library
   sensor_msgs
   realtime_tools
 )
@@ -24,10 +24,10 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
-generate_parameter_library(
-  joint_mimic_controller_parameters
-  src/joint_mimic_controller_parameters.yaml
-)
+# generate_parameter_library(
+#   joint_mimic_controller_parameters
+#   src/joint_mimic_controller_parameters.yaml
+# )
 
 add_library(${PROJECT_NAME} SHARED
   src/joint_mimic_controller.cpp
@@ -36,9 +36,9 @@ add_library(${PROJECT_NAME} SHARED
 target_include_directories(${PROJECT_NAME} PRIVATE
   include
 )
-target_link_libraries(${PROJECT_NAME}
-  joint_mimic_controller_parameters
-)
+# target_link_libraries(${PROJECT_NAME}
+#   joint_mimic_controller_parameters
+# )
 ament_target_dependencies(${PROJECT_NAME}
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
@@ -64,7 +64,7 @@ endif()
 install(
   TARGETS 
     ${PROJECT_NAME}
-    joint_mimic_controller_parameters
+    # joint_mimic_controller_parameters
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib

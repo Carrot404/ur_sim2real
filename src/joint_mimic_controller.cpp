@@ -16,26 +16,43 @@ namespace
 
 namespace ur_sim2real
 {
-  controller_interface::CallbackReturn JointMimicController::on_init()
+
+  controller_interface::return_type JointMimicController::init(
+      const std::string &controller_name)
   {
+    auto ret = ControllerInterface::init(controller_name);
+    if (ret != controller_interface::return_type::OK)
+    {
+      return ret;
+    }
+
+    std::string tf_prefix_sim = "ursim.";
+    std::string tf_prefix_real = "ur3e.";
+    std::vector<std::string> joints = {"shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint",
+                                       "wrist_1_joint", "wrist_2_joint", "wrist_3_joint"};
+    std::string joint_state_topic = "/URSIM/joint_states";
+
     try
     {
-      // Create the parameter listener and get the parameters
-      param_listener_ = std::make_shared<joint_mimic_controller::ParamListener>(get_node());
-      params_ = param_listener_->get_params();
+      auto_declare<std::string>("tf_prefix_sim", tf_prefix_sim);
 
-      RCLCPP_INFO(LOGGER, "Loading JointMimicController!");
+      auto_declare<std::string>("tf_prefix_real", tf_prefix_real);
+
+      auto_declare<std::vector<std::string>>("joints", joints);
+
+      auto_declare<std::string>("joint_state_topic", joint_state_topic);
     }
-    catch (std::exception &e)
+    catch (const std::exception &e)
     {
       fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
-      return controller_interface::CallbackReturn::ERROR;
+      return controller_interface::return_type::ERROR;
     }
 
-    return controller_interface::CallbackReturn::SUCCESS;
+    return controller_interface::return_type::OK;
   }
 
-  controller_interface::InterfaceConfiguration JointMimicController::command_interface_configuration() const
+  controller_interface::InterfaceConfiguration
+  JointMimicController::command_interface_configuration() const
   {
     controller_interface::InterfaceConfiguration config;
     config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
@@ -49,48 +66,49 @@ namespace ur_sim2real
     return config;
   }
 
-  controller_interface::InterfaceConfiguration JointMimicController::state_interface_configuration() const
+  controller_interface::InterfaceConfiguration
+  JointMimicController::state_interface_configuration() const
   {
     return controller_interface::InterfaceConfiguration{controller_interface::interface_configuration_type::NONE};
   }
 
-  controller_interface::CallbackReturn
-  JointMimicController::on_configure(const rclcpp_lifecycle::State & /*previous_state*/)
+  CallbackReturn JointMimicController::on_configure(const rclcpp_lifecycle::State & /*previous_state*/)
   {
-    if (param_listener_->is_old(params_))
-    {
-      params_ = param_listener_->get_params();
-    }
-    std::vector<std::string> joint_names = params_.joints;
+    std::vector<std::string> joint_names = node_->get_parameter("joints").as_string_array();
     if (joint_names.empty())
     {
-      RCLCPP_ERROR(LOGGER, "No joint names specified in ROS2 parameters");
-      return controller_interface::CallbackReturn::ERROR;
+      RCLCPP_ERROR(LOGGER, "'joints' parameter was empty");
+      return CallbackReturn::ERROR;
     }
+
     num_joints_ = joint_names.size();
     joint_names_sim_.resize(num_joints_);
     joint_names_real_.resize(num_joints_);
     position_cmd_.resize(num_joints_);
 
-    if (!params_.tf_prefix_sim.empty())
+    std::string tf_prefix_sim = node_->get_parameter("tf_prefix_sim").as_string();
+    if (!tf_prefix_sim.empty())
     {
       for (size_t i = 0; i < num_joints_; ++i)
       {
-        joint_names_sim_[i] = params_.tf_prefix_sim + joint_names[i];
-      }
-    }
-    if (!params_.tf_prefix_real.empty())
-    {
-      for (size_t i = 0; i < num_joints_; ++i)
-      {
-        joint_names_real_[i] = params_.tf_prefix_real + joint_names[i];
+        joint_names_sim_[i] = tf_prefix_sim + joint_names[i];
       }
     }
 
-    if (params_.joint_state_topic.empty())
+    std::string tf_prefix_real = node_->get_parameter("tf_prefix_real").as_string();
+    if (!tf_prefix_real.empty())
+    {
+      for (size_t i = 0; i < num_joints_; ++i)
+      {
+        joint_names_real_[i] = tf_prefix_real + joint_names[i];
+      }
+    }
+
+    std::string joint_state_topic = node_->get_parameter("joint_state_topic").as_string();
+    if (joint_state_topic.empty())
     {
       RCLCPP_ERROR(LOGGER, "Joint state topic is empty!");
-      return controller_interface::CallbackReturn::ERROR;
+      return CallbackReturn::ERROR;
     }
 
     try
@@ -106,14 +124,35 @@ namespace ur_sim2real
       fprintf(
           stderr, "Exception thrown during subscriber creation at configure stage with message : %s \n",
           e.what());
-      return controller_interface::CallbackReturn::ERROR;
+      return CallbackReturn::ERROR;
     }
-
-    return controller_interface::CallbackReturn::SUCCESS;
+    return CallbackReturn::SUCCESS;
   }
 
-  controller_interface::CallbackReturn
-  JointMimicController::on_activate(const rclcpp_lifecycle::State & /*previous_state*/)
+  // Fill ordered_interfaces with references to the matching interfaces
+  // in the same order as in joint_names
+  template <typename T>
+  bool get_ordered_interfaces(
+      std::vector<T> &unordered_interfaces, const std::vector<std::string> &joint_names,
+      const std::string &interface_type, std::vector<std::reference_wrapper<T>> &ordered_interfaces)
+  {
+    for (const auto &joint_name : joint_names)
+    {
+      for (auto &command_interface : unordered_interfaces)
+      {
+        if (
+            (command_interface.get_name() == joint_name) &&
+            (command_interface.get_interface_name() == interface_type))
+        {
+          ordered_interfaces.push_back(std::ref(command_interface));
+        }
+      }
+    }
+
+    return joint_names.size() == ordered_interfaces.size();
+  }
+
+  CallbackReturn JointMimicController::on_activate(const rclcpp_lifecycle::State & /*previous_state*/)
   {
 
     if (!controller_interface::get_ordered_interfaces(command_interfaces_,
@@ -124,28 +163,32 @@ namespace ur_sim2real
       RCLCPP_ERROR(LOGGER, "Expected %zu command interfaces, got %zu.",
                    joint_names_real_.size(),
                    position_command_interfaces_.size());
-      return controller_interface::CallbackReturn::ERROR;
+      return CallbackReturn::ERROR;
     }
 
-    return controller_interface::CallbackReturn::SUCCESS;
+    // reset command buffer if a command came through callback when controller was inactive
+    joint_state_buffer_ = realtime_tools::RealtimeBuffer<std::shared_ptr<sensor_msgs::msg::JointState>>(nullptr);
+
+    return CallbackReturn::SUCCESS;
   }
 
-  controller_interface::CallbackReturn
-  JointMimicController::on_deactivate(const rclcpp_lifecycle::State & /*previous_state*/)
+  CallbackReturn JointMimicController::on_deactivate(const rclcpp_lifecycle::State & /*previous_state*/)
   {
     position_command_interfaces_.clear();
-    return controller_interface::CallbackReturn::SUCCESS;
+
+    joint_state_buffer_ = realtime_tools::RealtimeBuffer<std::shared_ptr<CmdType>>(nullptr);
+
+    return CallbackReturn::SUCCESS;
   }
 
-  controller_interface::return_type JointMimicController::update(const rclcpp::Time & /*time*/,
-                                                                 const rclcpp::Duration & /*period*/)
+  controller_interface::return_type JointMimicController::update()
   {
     // read joint state from buffer
     joint_state_msg_ = *joint_state_buffer_.readFromRT();
     if (!joint_state_msg_.get())
     {
-      RCLCPP_ERROR(LOGGER, "No joint state message received");
-      return controller_interface::return_type::ERROR;
+      RCLCPP_INFO(LOGGER, "No joint state message received");
+      return controller_interface::return_type::OK;
     }
 
     // write joint state to command interfaces
@@ -168,7 +211,7 @@ namespace ur_sim2real
       position_cmd_[i] = joint_position[joint_index];
       position_command_interfaces_[i].get().set_value(position_cmd_[i]);
     }
-    
+
     return controller_interface::return_type::OK;
   }
 

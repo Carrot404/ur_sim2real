@@ -14,8 +14,7 @@
 #include <string>
 #include <vector>
 
-#include "rclcpp/time.hpp"
-#include "rclcpp/duration.hpp"
+#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "controller_interface/controller_interface.hpp"
 #include "controller_interface/helpers.hpp"
 #include "hardware_interface/loaned_command_interface.hpp"
@@ -27,31 +26,29 @@
 
 namespace ur_sim2real
 {
+  using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
   class JointMimicController : public controller_interface::ControllerInterface
   {
   public:
     JointMimicController() = default;
     ~JointMimicController() = default;
 
+    controller_interface::return_type init(const std::string &controller_name) override;
+
     controller_interface::InterfaceConfiguration command_interface_configuration() const override;
 
     controller_interface::InterfaceConfiguration state_interface_configuration() const override;
 
-    controller_interface::return_type update(const rclcpp::Time &time, const rclcpp::Duration &period) override;
+    CallbackReturn on_configure(const rclcpp_lifecycle::State &previous_state) override;
 
-    controller_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State &previous_state) override;
+    CallbackReturn on_activate(const rclcpp_lifecycle::State &previous_state) override;
 
-    controller_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State &previous_state) override;
+    CallbackReturn on_deactivate(const rclcpp_lifecycle::State &previous_state) override;
 
-    controller_interface::CallbackReturn on_deactivate(const rclcpp_lifecycle::State &previous_state) override;
-
-    controller_interface::CallbackReturn on_init() override;
+    controller_interface::return_type update() override;
 
   protected:
-    // Parameters from ROS for JointMimicController
-    std::shared_ptr<joint_mimic_controller::ParamListener> param_listener_;
-    joint_mimic_controller::Params params_;
-
     size_t num_joints_;
     std::vector<std::string> joint_names_sim_;
     std::vector<std::string> joint_names_real_;
