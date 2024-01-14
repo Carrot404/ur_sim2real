@@ -14,6 +14,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   pluginlib
   generate_parameter_library
   sensor_msgs
+  trajectory_msgs
   realtime_tools
 )
 
@@ -49,6 +50,13 @@ target_compile_options(${PROJECT_NAME} PRIVATE -Wpedantic -Werror=return-type)
 target_compile_definitions(${PROJECT_NAME} PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 pluginlib_export_plugin_description_file(controller_interface controller_plugins.xml)
 
+add_executable(sync_joint_node
+  src/sync_joint.cpp
+)
+ament_target_dependencies(sync_joint_node
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
+)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
@@ -69,6 +77,11 @@ install(
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
+)
+
+install(
+  TARGETS sync_joint_node
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 install(DIRECTORY include/
