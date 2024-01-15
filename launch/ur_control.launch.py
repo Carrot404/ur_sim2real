@@ -372,6 +372,13 @@ def launch_setup(context, *args, **kwargs):
         condition=UnlessCondition(activate_joint_controller),
     )
 
+    io_mimic_node = Node(
+        package="ur_sim2real",
+        executable="io_mimic_node",
+        name="io_mimic",
+        output="screen",
+    )
+
     nodes_to_start = [
         control_node,
         ur_control_node,
@@ -382,6 +389,7 @@ def launch_setup(context, *args, **kwargs):
         rviz_node,
         initial_joint_controller_spawner_stopped,
         initial_joint_controller_spawner_started,
+        io_mimic_node,
     ] + controller_spawners
 
     return nodes_to_start
