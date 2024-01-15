@@ -15,6 +15,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   generate_parameter_library
   sensor_msgs
   trajectory_msgs
+  ur_msgs
   realtime_tools
 )
 
@@ -57,6 +58,13 @@ ament_target_dependencies(sync_joint_node
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 
+add_executable(io_mimic_node
+  src/io_mimic_node.cpp
+)
+ament_target_dependencies(io_mimic_node
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
+)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
@@ -80,7 +88,7 @@ install(
 )
 
 install(
-  TARGETS sync_joint_node
+  TARGETS sync_joint_node io_mimic_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
