@@ -44,14 +44,31 @@ IO_Mimic_Node() : Node("io_mimic_node")
         request->fun = 1;
         request->pin = 0;
 
-        if (msg->digital_out_states[0].state == 1)
+        if (msg->digital_out_states[0].state != current_io_state_)
         {
-          request->state = 1;
+          current_io_state_ = msg->digital_out_states[0].state;
+          if (current_io_state_)
+          {
+            request->state = 1;
+          }
+          else
+          {
+            request->state = 0;
+          }
         }
         else
         {
-          request->state = 0;
+          return;
         }
+
+        // if (msg->digital_out_states[0].state == 1)
+        // {
+        //   request->state = 1;
+        // }
+        // else
+        // {
+        //   request->state = 0;
+        // }
 
         // sync send request
         auto result = set_io_client_->async_send_request(request);
@@ -67,6 +84,7 @@ rclcpp::Client<ur_msgs::srv::SetIO>::SharedPtr set_io_client_;
 // subscriber
 rclcpp::Subscription<ur_msgs::msg::IOStates>::SharedPtr io_states_subscriber_;
 
+bool current_io_state_ = false;
 
 };
 
