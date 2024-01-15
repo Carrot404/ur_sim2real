@@ -53,17 +53,8 @@ IO_Mimic_Node() : Node("io_mimic_node")
           request->state = 0;
         }
 
+        // sync send request
         auto result = set_io_client_->async_send_request(request);
-        // future
-        if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), result) ==
-            rclcpp::FutureReturnCode::SUCCESS)
-        {
-          RCLCPP_INFO(this->get_logger(), "set io success");
-        }
-        else
-        {
-          RCLCPP_ERROR(this->get_logger(), "Failed to set io");
-        }
       });
 }
 
