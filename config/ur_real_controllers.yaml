@@ -30,6 +30,9 @@ UR3E:
       joint_mimic_controller:
         type: ur_sim2real/JointMimicController
 
+      io_mimic_controller:
+        type: ur_sim2real/JointMimicController
+
   io_and_status_controller:
     ros__parameters:
       tf_prefix: ur3e.

@@ -33,8 +33,8 @@ generate_parameter_library(
 
 add_library(${PROJECT_NAME} SHARED
   src/joint_mimic_controller.cpp
+  src/io_mimic_controller.cpp
 )
-
 target_include_directories(${PROJECT_NAME} PRIVATE
   include
 )

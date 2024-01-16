@@ -51,5 +51,5 @@
 ## TODO:
 
 - [ ]  before activate controller, let simulated robot track real robot first!
-
+- [ ]  test for io_mimic_controller and add it to launch file.
    

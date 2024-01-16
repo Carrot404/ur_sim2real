@@ -4,4 +4,9 @@
       This controller for the UR robot simulates the joint states of the simulated robot.
     </description>
   </class>
+  <class name="ur_sim2real/IOMimicController" type="ur_sim2real::IOMimicController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      This controller for the UR robot simulates the io states of the simulated robot.
+    </description>
+  </class>
 </library>

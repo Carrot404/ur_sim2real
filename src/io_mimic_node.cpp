@@ -19,73 +19,70 @@ using namespace std::chrono_literals;
 
 class IO_Mimic_Node : public rclcpp::Node
 {
-public: 
-IO_Mimic_Node() : Node("io_mimic_node")
-{
-  // service client
-  set_io_client_ = this->create_client<ur_msgs::srv::SetIO>("/UR3E/io_and_status_controller/set_io");
-  // wait for server
-  while (!set_io_client_->wait_for_service(1s))
+public:
+  IO_Mimic_Node() : Node("io_mimic_node")
   {
-    if (!rclcpp::ok())
+    // service client
+    set_io_client_ = this->create_client<ur_msgs::srv::SetIO>("/UR3E/io_and_status_controller/set_io");
+    // wait for server
+    while (!set_io_client_->wait_for_service(1s))
     {
-      RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for the service. Exiting.");
-      return;
-    }
-    RCLCPP_INFO(this->get_logger(), "service not available, waiting again...");
-  }
-
-  // subscriber
-  io_states_subscriber_ = this->create_subscription<ur_msgs::msg::IOStates>(
-      "/URSIM/io_and_status_controller/io_states", 10,
-      [this](const ur_msgs::msg::IOStates::SharedPtr msg)
+      if (!rclcpp::ok())
       {
-        auto request = std::make_shared<ur_msgs::srv::SetIO::Request>();
-        request->fun = 1;
-        request->pin = 0;
+        RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for the service. Exiting.");
+        return;
+      }
+      RCLCPP_INFO(this->get_logger(), "service not available, waiting again...");
+    }
 
-        if (msg->digital_out_states[0].state != current_io_state_)
+    // subscriber
+    io_states_subscriber_ = this->create_subscription<ur_msgs::msg::IOStates>(
+        "/URSIM/io_and_status_controller/io_states", 10,
+        [this](const ur_msgs::msg::IOStates::SharedPtr msg)
         {
-          current_io_state_ = msg->digital_out_states[0].state;
-          if (current_io_state_)
+          auto request = std::make_shared<ur_msgs::srv::SetIO::Request>();
+          request->fun = 1;
+          request->pin = 0;
+
+          if (msg->digital_out_states[0].state != current_io_state_)
           {
-            request->state = 1;
+            current_io_state_ = msg->digital_out_states[0].state;
+            if (current_io_state_)
+            {
+              request->state = 1;
+            }
+            else
+            {
+              request->state = 0;
+            }
           }
           else
           {
-            request->state = 0;
+            return;
           }
-        }
-        else
-        {
-          return;
-        }
 
-        // if (msg->digital_out_states[0].state == 1)
-        // {
-        //   request->state = 1;
-        // }
-        // else
-        // {
-        //   request->state = 0;
-        // }
+          // if (msg->digital_out_states[0].state == 1)
+          // {
+          //   request->state = 1;
+          // }
+          // else
+          // {
+          //   request->state = 0;
+          // }
 
-        // sync send request
-        auto result = set_io_client_->async_send_request(request);
-      });
-}
-
+          // sync send request
+          auto result = set_io_client_->async_send_request(request);
+        });
+  }
 
 protected:
+  // service client
+  rclcpp::Client<ur_msgs::srv::SetIO>::SharedPtr set_io_client_;
 
-// service client
-rclcpp::Client<ur_msgs::srv::SetIO>::SharedPtr set_io_client_;
+  // subscriber
+  rclcpp::Subscription<ur_msgs::msg::IOStates>::SharedPtr io_states_subscriber_;
 
-// subscriber
-rclcpp::Subscription<ur_msgs::msg::IOStates>::SharedPtr io_states_subscriber_;
-
-bool current_io_state_ = false;
-
+  bool current_io_state_ = false;
 };
 
 int main(int argc, char **argv)
