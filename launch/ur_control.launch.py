@@ -337,7 +337,6 @@ def launch_setup(context, *args, **kwargs):
         "io_and_status_controller",
         "speed_scaling_state_broadcaster",
         "force_torque_sensor_broadcaster",
-        "io_mimic_controller",
     ]
     # controller_spawner_inactive_names = ["forward_position_controller"]
 
