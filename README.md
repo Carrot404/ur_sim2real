@@ -28,15 +28,15 @@ There are two UR3e robots in our scenario, one is real robot and the other is si
    ros2 launch launch_ur_sim.launch.py robot_ip:=192.168.56.101 script_sender_port:=50012
    ```
 
-   > [!NOTE]
-   >
-   > Here we change default `script_sender_port` to `50012` to avoid **port conflicts** when we have two robots.
-   >
-   > we have changed 4 ports for ur_robot_driver to ` 50011` - `50014`
+> [!NOTE]
+>
+> Here we change default `script_sender_port` to `50012` to avoid **port conflicts** when we have two robots.
+>
+> we have changed 4 ports for ur_robot_driver to ` 50011` - `50014`
 
-   > [!IMPORTANT]
-   >
-   > change Host IP and Custom Port `(50012)` in External Control Setting
+> [!IMPORTANT]
+>
+> change Host IP and Custom Port `(50012)` in External Control Setting
 
 3. ROS2 Env: **Humble**
 
@@ -50,9 +50,9 @@ There are two UR3e robots in our scenario, one is real robot and the other is si
 
    For real robot, we load a `joint_mimic_controller` to track joints of simulated robots. 
 
-   > [!WARNING]
-   >
-   > when you activate `joint_mimic_controller`, it may cause fast tracking motion if totally different configuration of these two robots.
+> [!WARNING]
+>
+> when you activate `joint_mimic_controller`, it may cause fast tracking motion if totally different configuration of these two robots.
 
 4. Activate `joint_mimic_controller` 
 
